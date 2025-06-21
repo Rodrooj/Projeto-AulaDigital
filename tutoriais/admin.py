@@ -12,7 +12,7 @@ class TutorialAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'descricao')
     ordering = ('-data_publicacao',)
     readonly_fields = ('data_publicacao',)
-
+    
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('titulo', 'descricao', 'tipo', 'link_conteudo')

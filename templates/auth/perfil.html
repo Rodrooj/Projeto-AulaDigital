@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meu Perfil - AulaDigital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Access Check -->
+    <div id="access-denied" class="text-center py-5" style="display: none;">
+        <i class="fas fa-lock display-1 text-muted mb-3"></i>
+        <h3 class="text-muted">Acesso Restrito</h3>
+        <p class="text-muted mb-4">Você precisa estar logado para ver seu perfil</p>
+        <a href="{% url 'login' %}" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt me-1"></i>Fazer Login
+        </a>
+    </div>
+
+    <!-- Profile Content -->
+    <div id="profile-content" style="display: none;">
+        <div class="row">
+            <!-- Profile Info -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="profile-avatar mb-3">
+                            <i class="fas fa-user-circle display-1 text-primary"></i>
+                        </div>
+                        <h4 id="profile-name" class="mb-1"></h4>
+                        <p id="profile-type" class="text-muted mb-3"></p>
+                        <span id="profile-status" class="badge bg-success">Ativo</span>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="profile-stats">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h5 id="profile-join-date" class="text-primary mb-0"></h5>
+                                    <small class="text-muted">Membro desde</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 id="profile-last-login" class="text-success mb-0">Hoje</h5>
+                                    <small class="text-muted">Último acesso</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'tutoriais' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-book me-1"></i>Ver Tutoriais
+                            </a>
+                            <button class="btn btn-outline-success btn-sm" id="quiz-btn" style="display: none;">
+                                <i class="fas fa-gamepad me-1"></i>Jogar Quiz
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="changePassword()">
+                                <i class="fas fa-key me-1"></i>Alterar Senha
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-1"></i>Sair
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Details -->
+            <div class="col-lg-8">
+                <!-- Personal Information -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Informações Pessoais
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="editProfile()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <form id="profile-form">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome Completo</label>
+                                        <input type="text" class="form-control" id="edit-nome" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome de Usuário</label>
+                                        <input type="text" class="form-control" id="edit-username" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">E-mail</label>
+                                        <input type="email" class="form-control" id="edit-email" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Matrícula</label>
+                                        <input type="text" class="form-control" id="edit-matricula" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end" id="profile-actions" style="display: none;">
+                                <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Statistics (for students) -->
+                <div id="student-stats" class="card shadow-sm border-0 mb-4" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Estatísticas do Quiz
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="quiz-stats">
+                            <!-- Stats will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Log -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Atividade Recente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="activity-log">
+                            <!-- Activity will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>Alterar Senha
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="change-password-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current-password" class="form-label">Senha Atual</label>
+                        <input type="password" class="form-control" id="current-password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new-password" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="new-password" 
+                               required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm-password" class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirm-password" 
+                               required minlength="6">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Alterar Senha
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentUser = null;
+let isEditing = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkUserAccess();
+    setupForms();
+});
+
+function checkUserAccess() {
+    const userData = localStorage.getItem('userData');
+    
+    if (!userData) {
+        showAccessDenied();
+        return;
+    }
+    
+    currentUser = JSON.parse(userData);
+    showProfileContent();
+    loadUserProfile();
+}
+
+function showAccessDenied() {
+    document.getElementById('access-denied').style.display = 'block';
+    document.getElementById('profile-content').style.display = 'none';
+}
+
+function showProfileContent() {
+    document.getElementById('access-denied').style.display = 'none';
+    document.getElementById('profile-content').style.display = 'block';
+}
+
+async function loadUserProfile() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/usuarios/perfil/', {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const userData = await response.json();
+            displayUserProfile(userData);
+            
+            if (userData.tipo_usuario === 'aluno') {
+                loadStudentStats();
+                document.getElementById('quiz-btn').style.display = 'block';
+                document.getElementById('quiz-btn').onclick = () => window.location.href = '/quiz/';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+    }
+}
+
+function displayUserProfile(user) {
+    // Update profile display
+    document.getElementById('profile-name').textContent = user.nome || user.username;
+    document.getElementById('profile-type').textContent = getTipoUsuarioDisplay(user.tipo_usuario);
+    
+    const joinDate = new Date(user.data_criacao).toLocaleDateString('pt-BR');
+    document.getElementById('profile-join-date').textContent = joinDate;
+    
+    // Update form fields
+    document.getElementById('edit-nome').value = user.nome || '';
+    document.getElementById('edit-username').value = user.username || '';
+    document.getElementById('edit-email').value = user.email || '';
+    document.getElementById('edit-matricula').value = user.matricula || '';
+    
+    // Load activity log
+    loadActivityLog();
+}
+
+async function loadStudentStats() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/resultados/estatisticas/', {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            displayStudentStats(stats);
+            document.getElementById('student-stats').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+function displayStudentStats(stats) {
+    const container = document.getElementById('quiz-stats');
+    
+    container.innerHTML = `
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <h4 class="text-primary mb-0">${stats.total_respostas}</h4>
+                <small class="text-muted">Perguntas</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <h4 class="text-success mb-0">${stats.acertos}</h4>
+                <small class="text-muted">Acertos</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <h4 class="text-danger mb-0">${stats.erros}</h4>
+                <small class="text-muted">Erros</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <h4 class="text-info mb-0">${stats.percentual_acerto}%</h4>
+                <small class="text-muted">Taxa de Acerto</small>
+            </div>
+        </div>
+    `;
+}
+
+function loadActivityLog() {
+    const container = document.getElementById('activity-log');
+    
+    // Simulated activity log
+    const activities = [
+        { action: 'Login realizado', time: 'Há 5 minutos', icon: 'fas fa-sign-in-alt', color: 'success' },
+        { action: 'Visualizou tutorial sobre Google Docs', time: 'Há 2 horas', icon: 'fas fa-book', color: 'primary' },
+        { action: 'Respondeu pergunta no quiz', time: 'Ontem', icon: 'fas fa-gamepad', color: 'warning' },
+        { action: 'Perfil atualizado', time: 'Há 3 dias', icon: 'fas fa-user-edit', color: 'info' }
+    ];
+    
+    container.innerHTML = activities.map(activity => `
+        <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+                <i class="${activity.icon} text-${activity.color}"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <div class="fw-bold">${activity.action}</div>
+                <small class="text-muted">${activity.time}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function editProfile() {
+    isEditing = true;
+    
+    // Enable form fields
+    document.getElementById('edit-nome').disabled = false;
+    document.getElementById('edit-email').disabled = false;
+    document.getElementById('edit-matricula').disabled = false;
+    
+    // Show action buttons
+    document.getElementById('profile-actions').style.display = 'block';
+}
+
+function cancelEdit() {
+    isEditing = false;
+    
+    // Disable form fields
+    document.getElementById('edit-nome').disabled = true;
+    document.getElementById('edit-email').disabled = true;
+    document.getElementById('edit-matricula').disabled = true;
+    
+    // Hide action buttons
+    document.getElementById('profile-actions').style.display = 'none';
+    
+    // Reload original data
+    loadUserProfile();
+}
+
+function setupForms() {
+    // Profile form
+    const profileForm = document.getElementById('profile-form');
+    profileForm.addEventListener('submit', handleProfileUpdate);
+    
+    // Change password form
+    const passwordForm = document.getElementById('change-password-form');
+    passwordForm.addEventListener('submit', handlePasswordChange);
+}
+
+async function handleProfileUpdate(event) {
+    event.preventDefault();
+    
+    if (!isEditing) return;
+    
+    const formData = new FormData(event.target);
+    const updateData = {
+        nome: document.getElementById('edit-nome').value,
+        email: document.getElementById('edit-email').value,
+        matricula: document.getElementById('edit-matricula').value || null
+    };
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/usuarios/atualizar_perfil/', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showAlert('Perfil atualizado com sucesso!', 'success');
+            
+            // Update stored user data
+            localStorage.setItem('userData', JSON.stringify(data.user));
+            currentUser = data.user;
+            
+            cancelEdit();
+        } else {
+            showAlert('Erro ao atualizar perfil', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao atualizar perfil', 'danger');
+    }
+}
+
+function changePassword() {
+    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+    modal.show();
+}
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (newPassword !== confirmPassword) {
+        showAlert('As senhas não coincidem', 'danger');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/usuarios/atualizar_perfil/', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({
+                password: newPassword
+            })
+        });
+        
+        if (response.ok) {
+            showAlert('Senha alterada com sucesso!', 'success');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            modal.hide();
+            
+            // Clear form
+            document.getElementById('change-password-form').reset();
+        } else {
+            showAlert('Erro ao alterar senha', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao alterar senha', 'danger');
+    }
+}
+
+function getTipoUsuarioDisplay(tipo) {
+    const tipos = {
+        'professor': 'Professor',
+        'aluno': 'Aluno',
+        'administrador': 'Administrador'
+    };
+    return tipos[tipo] || tipo;
+}
+
+function logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    window.location.href = '/';
+}
+
+function showAlert(message, type = 'info') {
+    const alertsContainer = document.getElementById('alerts-container');
+    if (!alertsContainer) return;
+    
+    const alertId = 'alert-' + Date.now();
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertsContainer.insertAdjacentHTML('beforeend', alertHTML);
+    
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
+

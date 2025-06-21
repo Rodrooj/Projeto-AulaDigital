@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - AulaDigital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 border-radius-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Entrar no AulaDigital
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-1"></i>Usuário
+                            </label>
+                            <input type="text" class="form-control" id="username" 
+                                   name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Senha
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" 
+                                       name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="password-toggle-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" 
+                                    data-original-text="Entrar">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-3">Não tem uma conta?</p>
+                        <a href="{% url 'registro' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus me-2"></i>Criar Conta Gratuita
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light text-center py-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Use suas credenciais de professor ou aluno
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Demo Accounts -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-users me-2"></i>Contas de Demonstração
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Professor:</small>
+                            <button class="btn btn-sm btn-outline-secondary mb-2" 
+                                    onclick="fillDemoAccount('prof_carlos', 'senha_segura_123')">
+                                prof_carlos
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Aluno:</small>
+                            <button class="btn btn-sm btn-outline-secondary mb-2" 
+                                    onclick="fillDemoAccount('ana_julia', 'outra_senha_456')">
+                                ana_julia
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted d-block">Administrador:</small>
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="fillDemoAccount('admin', 'admin123')">
+                            admin
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is already logged in
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+        window.location.href = '/';
+        return;
+    }
+    
+    // Setup form submission
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', handleLogin);
+});
+
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const loginData = {
+        username: formData.get('username'),
+        password: formData.get('password')
+    };
+    
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.dataset.originalText;
+    
+    // Show loading state
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrando...';
+    
+    try {
+        const response = await fetch('/api/usuarios/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.token) {
+            // Store authentication data
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userData', JSON.stringify(data.user));
+            
+            showAlert('Login realizado com sucesso!', 'success');
+            
+            // Redirect after short delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        } else {
+            showAlert(data.message || 'Credenciais inválidas', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro no login:', error);
+        showAlert('Erro de conexão. Tente novamente.', 'danger');
+    } finally {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = `<i class="fas fa-sign-in-alt me-2"></i>${originalText}`;
+    }
+}
+
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('password-toggle-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'fas fa-eye';
+    }
+}
+
+function fillDemoAccount(username, password) {
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password;
+}
+
+function showAlert(message, type = 'info') {
+    const alertsContainer = document.getElementById('alerts-container');
+    if (!alertsContainer) return;
+    
+    const alertId = 'alert-' + Date.now();
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertsContainer.insertAdjacentHTML('beforeend', alertHTML);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
+

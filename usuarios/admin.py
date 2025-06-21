@@ -12,15 +12,15 @@ class UsuarioAdmin(UserAdmin):
     list_filter = ('tipo_usuario', 'is_active', 'is_staff', 'data_criacao')
     search_fields = ('username', 'nome', 'email', 'matricula')
     ordering = ('-data_criacao',)
-
+    
     fieldsets = UserAdmin.fieldsets + (
         ('Informações Adicionais', {
             'fields': ('nome', 'tipo_usuario', 'matricula', 'data_criacao')
         }),
     )
-
+    
     readonly_fields = ('data_criacao',)
-
+    
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informações Adicionais', {
             'fields': ('nome', 'tipo_usuario', 'matricula')

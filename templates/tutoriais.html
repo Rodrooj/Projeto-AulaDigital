@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tutoriais - AulaDigital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-book text-primary me-3"></i>
+                Tutoriais Educacionais
+            </h1>
+            <p class="lead text-muted">
+                Aprenda a usar ferramentas digitais para transformar suas aulas
+            </p>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="search-input" 
+                       placeholder="Buscar tutoriais...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" id="type-filter" onchange="filterTutorials()">
+                <option value="">Todos os tipos</option>
+                <option value="video">Vídeos</option>
+                <option value="texto">Artigos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tutorial Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-primary active" onclick="filterByCategory('all')">
+                    Todos
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByCategory('slides')">
+                    Slides
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByCategory('docs')">
+                    Google Docs
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByCategory('pesquisa')">
+                    Pesquisas
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByCategory('ia')">
+                    Inteligência Artificial
+                </button>
+                <button class="btn btn-outline-primary" onclick="filterByCategory('projetor')">
+                    Projetores
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2 text-muted">Carregando tutoriais...</p>
+    </div>
+
+    <!-- Tutorials Grid -->
+    <div class="row" id="tutorials-container">
+        <!-- Tutoriais serão carregados aqui via JavaScript -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="text-center py-5" style="display: none;">
+        <i class="fas fa-search display-1 text-muted mb-3"></i>
+        <h3 class="text-muted">Nenhum tutorial encontrado</h3>
+        <p class="text-muted">Tente ajustar os filtros ou termos de busca</p>
+    </div>
+
+    <!-- Add Tutorial Button (Admin only) -->
+    <div class="text-center mt-5" id="admin-actions" style="display: none;">
+        <button class="btn btn-success btn-lg" onclick="showAddTutorialModal()">
+            <i class="fas fa-plus me-2"></i>Adicionar Tutorial
+        </button>
+    </div>
+</div>
+
+<!-- Add Tutorial Modal -->
+<div class="modal fade" id="addTutorialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Adicionar Novo Tutorial
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="add-tutorial-form">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="tutorial-title" class="form-label">Título *</label>
+                                <input type="text" class="form-control" id="tutorial-title" 
+                                       name="titulo" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="tutorial-type" class="form-label">Tipo *</label>
+                                <select class="form-select" id="tutorial-type" name="tipo" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="video">Vídeo</option>
+                                    <option value="texto">Artigo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tutorial-description" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="tutorial-description" 
+                                  name="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tutorial-link" class="form-label">Link do Conteúdo *</label>
+                        <input type="url" class="form-control" id="tutorial-link" 
+                               name="link_conteudo" required 
+                               placeholder="https://exemplo.com/tutorial">
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="tutorial-active" 
+                               name="ativo" checked>
+                        <label class="form-check-label" for="tutorial-active">
+                            Tutorial ativo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Salvar Tutorial
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFilters = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTutorials();
+    checkAdminPermissions();
+    setupTutorialForm();
+});
+
+async function loadTutorials(filters = {}) {
+    showLoading(true);
+    currentFilters = { ...currentFilters, ...filters };
+    
+    try {
+        const queryParams = new URLSearchParams(currentFilters).toString();
+        const endpoint = queryParams ? `/api/tutoriais/?${queryParams}` : '/api/tutoriais/';
+        
+        const response = await fetch(endpoint);
+        if (response.ok) {
+            const data = await response.json();
+            const tutorials = data.results || data;
+            displayTutorials(tutorials);
+        } else {
+            showEmptyState();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar tutoriais:', error);
+        showEmptyState();
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayTutorials(tutorials) {
+    const container = document.getElementById('tutorials-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (tutorials.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    container.innerHTML = '';
+    
+    tutorials.forEach(tutorial => {
+        const tutorialCard = createTutorialCard(tutorial);
+        container.appendChild(tutorialCard);
+    });
+}
+
+function createTutorialCard(tutorial) {
+    const col = document.createElement('div');
+    col.className = 'col-md-6 col-lg-4 mb-4';
+    
+    const typeIcon = tutorial.tipo === 'video' ? 'fas fa-play-circle' : 'fas fa-file-alt';
+    const typeColor = tutorial.tipo === 'video' ? 'text-danger' : 'text-primary';
+    const typeBadge = tutorial.tipo === 'video' ? 'bg-danger' : 'bg-primary';
+    
+    col.innerHTML = `
+        <div class="card h-100 tutorial-card shadow-sm border-0">
+            <div class="card-body position-relative">
+                <span class="badge ${typeBadge} tutorial-type-badge">
+                    <i class="${typeIcon} me-1"></i>${tutorial.tipo.toUpperCase()}
+                </span>
+                <h5 class="card-title mt-3">${tutorial.titulo}</h5>
+                <p class="card-text text-muted">${tutorial.descricao || 'Sem descrição disponível'}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>
+                        ${tutorial.criador_nome || 'AulaDigital'}
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        ${formatDate(tutorial.data_publicacao)}
+                    </small>
+                </div>
+                <div class="mt-3">
+                    <a href="${tutorial.link_conteudo}" target="_blank" 
+                       class="btn btn-primary btn-sm me-2">
+                        <i class="fas fa-external-link-alt me-1"></i>Acessar
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm" 
+                            onclick="shareTutorial('${tutorial.titulo}', '${tutorial.link_conteudo}')">
+                        <i class="fas fa-share me-1"></i>Compartilhar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return col;
+}
+
+function filterTutorials() {
+    const typeFilter = document.getElementById('type-filter').value;
+    const searchInput = document.getElementById('search-input').value;
+    
+    const filters = {};
+    if (typeFilter) filters.tipo = typeFilter;
+    if (searchInput) filters.q = searchInput;
+    
+    loadTutorials(filters);
+}
+
+function filterByCategory(category) {
+    // Update active button
+    document.querySelectorAll('.btn-outline-primary').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    const filters = {};
+    if (category !== 'all') {
+        filters.q = category;
+    }
+    
+    loadTutorials(filters);
+}
+
+function showLoading(show) {
+    const spinner = document.getElementById('loading-spinner');
+    const container = document.getElementById('tutorials-container');
+    
+    if (show) {
+        spinner.style.display = 'block';
+        container.style.display = 'none';
+    } else {
+        spinner.style.display = 'none';
+        container.style.display = 'flex';
+    }
+}
+
+function showEmptyState() {
+    const container = document.getElementById('tutorials-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    container.innerHTML = '';
+    emptyState.style.display = 'block';
+}
+
+function checkAdminPermissions() {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+        const user = JSON.parse(userData);
+        if (user.tipo_usuario === 'administrador') {
+            document.getElementById('admin-actions').style.display = 'block';
+        }
+    }
+}
+
+function showAddTutorialModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addTutorialModal'));
+    modal.show();
+}
+
+function setupTutorialForm() {
+    const form = document.getElementById('add-tutorial-form');
+    if (form) {
+        form.addEventListener('submit', handleAddTutorial);
+    }
+}
+
+async function handleAddTutorial(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const tutorialData = {
+        titulo: formData.get('titulo'),
+        descricao: formData.get('descricao'),
+        link_conteudo: formData.get('link_conteudo'),
+        tipo: formData.get('tipo'),
+        ativo: formData.get('ativo') === 'on'
+    };
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/tutoriais/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify(tutorialData)
+        });
+        
+        if (response.ok) {
+            showAlert('Tutorial adicionado com sucesso!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addTutorialModal'));
+            modal.hide();
+            form.reset();
+            loadTutorials();
+        } else {
+            showAlert('Erro ao adicionar tutorial', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao adicionar tutorial', 'danger');
+    }
+}
+
+function shareTutorial(title, url) {
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            url: url
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+            showAlert('Link copiado para a área de transferência!', 'info');
+        });
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+
+// Search functionality
+document.getElementById('search-input').addEventListener('input', 
+    debounce(filterTutorials, 300)
+);
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>
+{% endblock %}
+

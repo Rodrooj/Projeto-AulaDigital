@@ -22,12 +22,11 @@ class PerguntaAdmin(admin.ModelAdmin):
     ordering = ('-data_criacao',)
     readonly_fields = ('data_criacao',)
     inlines = [AlternativaInline]
-
+    
     def enunciado_resumido(self, obj):
         return obj.enunciado[:50] + "..." if len(obj.enunciado) > 50 else obj.enunciado
-
     enunciado_resumido.short_description = "Enunciado"
-
+    
     fieldsets = (
         ('Pergunta', {
             'fields': ('enunciado', 'dificuldade', 'ativa')
@@ -47,15 +46,13 @@ class AlternativaAdmin(admin.ModelAdmin):
     list_display = ('texto_resumido', 'pergunta_resumida', 'correta')
     list_filter = ('correta',)
     search_fields = ('texto_alternativa', 'pergunta__enunciado')
-
+    
     def texto_resumido(self, obj):
         return obj.texto_alternativa[:30] + "..." if len(obj.texto_alternativa) > 30 else obj.texto_alternativa
-
     texto_resumido.short_description = "Texto"
-
+    
     def pergunta_resumida(self, obj):
         return obj.pergunta.enunciado[:30] + "..." if len(obj.pergunta.enunciado) > 30 else obj.pergunta.enunciado
-
     pergunta_resumida.short_description = "Pergunta"
 
 
@@ -69,9 +66,8 @@ class ResultadoQuizAdmin(admin.ModelAdmin):
     search_fields = ('aluno__nome', 'pergunta__enunciado')
     ordering = ('-data_tentativa',)
     readonly_fields = ('data_tentativa', 'acertou')
-
+    
     def pergunta_resumida(self, obj):
         return obj.pergunta.enunciado[:30] + "..." if len(obj.pergunta.enunciado) > 30 else obj.pergunta.enunciado
-
     pergunta_resumida.short_description = "Pergunta"
 

@@ -18,10 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from . import views
 # from rest_framework.documentation import include_docs_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.home, name='home'),
+    path('tutoriais/', views.tutoriais_view, name='tutoriais'),
+    path('quiz/', views.quiz_view, name='quiz'),
+    path('login/', views.login_view, name='login'),
+    path('registro/', views.registro_view, name='registro'),
+    path('perfil/', views.perfil_view, name='perfil'),
     path('', include('usuarios.urls')),
     path('', include('tutoriais.urls')),
     path('', include('quiz.urls')),

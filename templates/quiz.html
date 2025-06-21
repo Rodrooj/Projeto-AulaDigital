@@ -1,0 +1,509 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EducaQuiz - AulaDigital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-gamepad text-warning me-3"></i>
+                EducaQuiz
+            </h1>
+            <p class="lead text-muted">
+                Teste seus conhecimentos de forma divertida e interativa
+            </p>
+        </div>
+    </div>
+
+    <!-- User Type Check -->
+    <div id="access-denied" class="text-center py-5" style="display: none;">
+        <i class="fas fa-lock display-1 text-muted mb-3"></i>
+        <h3 class="text-muted">Acesso Restrito</h3>
+        <p class="text-muted mb-4">Apenas alunos podem jogar o EducaQuiz</p>
+        <a href="{% url 'login' %}" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt me-1"></i>Fazer Login como Aluno
+        </a>
+    </div>
+
+    <!-- Quiz Interface -->
+    <div id="quiz-interface" style="display: none;">
+        <!-- Difficulty Selection -->
+        <div id="difficulty-selection" class="text-center mb-5">
+            <h3 class="mb-4">Escolha o nível de dificuldade:</h3>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-success btn-lg" onclick="startQuiz('facil')">
+                    <i class="fas fa-smile me-2"></i>Fácil
+                </button>
+                <button class="btn btn-warning btn-lg" onclick="startQuiz('medio')">
+                    <i class="fas fa-meh me-2"></i>Médio
+                </button>
+                <button class="btn btn-danger btn-lg" onclick="startQuiz('dificil')">
+                    <i class="fas fa-frown me-2"></i>Difícil
+                </button>
+                <button class="btn btn-primary btn-lg" onclick="startQuiz()">
+                    <i class="fas fa-random me-2"></i>Aleatório
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="quiz-container" style="display: none;">
+            <!-- Question will be loaded here -->
+            <div id="question-container"></div>
+            
+            <!-- Quiz Controls -->
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-secondary me-2" onclick="showDifficultySelection()">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </button>
+                <button class="btn btn-outline-primary" onclick="loadNewQuestion()">
+                    <i class="fas fa-sync-alt me-1"></i>Nova Pergunta
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statistics-section" class="mt-5">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="text-center mb-4">
+                        <i class="fas fa-chart-bar me-2"></i>Suas Estatísticas
+                    </h3>
+                </div>
+            </div>
+            
+            <div class="row" id="stats-container">
+                <!-- Statistics will be loaded here -->
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-info" onclick="loadStatistics()">
+                    <i class="fas fa-refresh me-1"></i>Atualizar Estatísticas
+                </button>
+                <button class="btn btn-outline-secondary ms-2" onclick="showHistory()">
+                    <i class="fas fa-history me-1"></i>Ver Histórico
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2 text-muted">Carregando pergunta...</p>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-history me-2"></i>Histórico de Respostas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="history-container">
+                    <!-- History will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentQuestion = null;
+let currentDifficulty = null;
+let userStats = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkUserAccess();
+    loadStatistics();
+});
+
+function checkUserAccess() {
+    const userData = localStorage.getItem('userData');
+    
+    if (!userData) {
+        showAccessDenied();
+        return;
+    }
+    
+    const user = JSON.parse(userData);
+    
+    if (user.tipo_usuario !== 'aluno') {
+        showAccessDenied();
+        return;
+    }
+    
+    showQuizInterface();
+}
+
+function showAccessDenied() {
+    document.getElementById('access-denied').style.display = 'block';
+    document.getElementById('quiz-interface').style.display = 'none';
+}
+
+function showQuizInterface() {
+    document.getElementById('access-denied').style.display = 'none';
+    document.getElementById('quiz-interface').style.display = 'block';
+}
+
+function showDifficultySelection() {
+    document.getElementById('difficulty-selection').style.display = 'block';
+    document.getElementById('quiz-container').style.display = 'none';
+    currentQuestion = null;
+    currentDifficulty = null;
+}
+
+async function startQuiz(difficulty = null) {
+    currentDifficulty = difficulty;
+    document.getElementById('difficulty-selection').style.display = 'none';
+    document.getElementById('quiz-container').style.display = 'block';
+    
+    await loadNewQuestion();
+}
+
+async function loadNewQuestion() {
+    showLoading(true);
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const endpoint = currentDifficulty 
+            ? `/api/perguntas/aleatoria/?dificuldade=${currentDifficulty}`
+            : '/api/perguntas/aleatoria/';
+        
+        const response = await fetch(endpoint, {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            currentQuestion = await response.json();
+            displayQuestion(currentQuestion);
+        } else {
+            showAlert('Erro ao carregar pergunta', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao carregar pergunta', 'danger');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayQuestion(question) {
+    const container = document.getElementById('question-container');
+    
+    const difficultyColors = {
+        'facil': 'success',
+        'medio': 'warning',
+        'dificil': 'danger'
+    };
+    
+    const difficultyColor = difficultyColors[question.dificuldade] || 'info';
+    
+    container.innerHTML = `
+        <div class="question-card card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-${difficultyColor} fs-6">
+                    ${question.dificuldade.toUpperCase()}
+                </span>
+                <small class="text-muted">
+                    <i class="fas fa-question-circle me-1"></i>
+                    Pergunta ${question.id}
+                </small>
+            </div>
+            
+            <h4 class="question-text mb-4">${question.enunciado}</h4>
+            
+            <div class="answers-container">
+                ${question.alternativas.map((alt, index) => `
+                    <div class="answer-option" data-id="${alt.id}" onclick="selectAnswer(${alt.id})">
+                        <div class="d-flex align-items-center">
+                            <span class="answer-letter me-3">
+                                ${String.fromCharCode(65 + index)}
+                            </span>
+                            <span class="answer-text">${alt.texto_alternativa}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+async function selectAnswer(alternativeId) {
+    if (!currentQuestion) return;
+    
+    // Disable all options
+    const options = document.querySelectorAll('.answer-option');
+    options.forEach(option => {
+        option.style.pointerEvents = 'none';
+        option.classList.add('disabled');
+    });
+    
+    // Highlight selected option
+    const selectedOption = document.querySelector(`[data-id="${alternativeId}"]`);
+    selectedOption.classList.add('selected');
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/perguntas/responder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({
+                pergunta_id: currentQuestion.id,
+                alternativa_id: alternativeId
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showAnswerResult(result, alternativeId);
+        } else {
+            showAlert('Erro ao enviar resposta', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao enviar resposta', 'danger');
+    }
+}
+
+function showAnswerResult(result, selectedId) {
+    const options = document.querySelectorAll('.answer-option');
+    
+    options.forEach(option => {
+        const optionId = parseInt(option.dataset.id);
+        
+        if (optionId === result.alternativa_correta.id) {
+            option.classList.add('correct');
+            option.innerHTML += ' <i class="fas fa-check-circle text-white ms-2"></i>';
+        } else if (optionId === selectedId && !result.acertou) {
+            option.classList.add('incorrect');
+            option.innerHTML += ' <i class="fas fa-times-circle text-white ms-2"></i>';
+        }
+    });
+    
+    // Show result message
+    const message = result.acertou 
+        ? '<i class="fas fa-check-circle me-2"></i>Parabéns! Resposta correta!' 
+        : '<i class="fas fa-times-circle me-2"></i>Resposta incorreta.';
+    
+    const alertType = result.acertou ? 'success' : 'danger';
+    
+    showAlert(`${message} ${result.explicacao}`, alertType);
+    
+    // Show next question button
+    setTimeout(() => {
+        const container = document.getElementById('question-container');
+        const nextButton = document.createElement('div');
+        nextButton.className = 'text-center mt-4';
+        nextButton.innerHTML = `
+            <button class="btn btn-primary btn-lg" onclick="loadNewQuestion()">
+                <i class="fas fa-arrow-right me-2"></i>Próxima Pergunta
+            </button>
+        `;
+        container.appendChild(nextButton);
+        
+        // Update statistics
+        loadStatistics();
+    }, 2000);
+}
+
+async function loadStatistics() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/resultados/estatisticas/', {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            userStats = await response.json();
+            displayStatistics(userStats);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+function displayStatistics(stats) {
+    const container = document.getElementById('stats-container');
+    
+    container.innerHTML = `
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-primary">${stats.total_respostas}</h3>
+                    <p class="text-muted mb-0">Perguntas Respondidas</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-success">${stats.acertos}</h3>
+                    <p class="text-muted mb-0">Acertos</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-danger">${stats.erros}</h3>
+                    <p class="text-muted mb-0">Erros</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-info">${stats.percentual_acerto}%</h3>
+                    <p class="text-muted mb-0">Taxa de Acerto</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add difficulty breakdown if available
+    if (stats.perguntas_por_dificuldade) {
+        const difficultyStats = document.createElement('div');
+        difficultyStats.className = 'col-12 mt-3';
+        difficultyStats.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Desempenho por Dificuldade
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        ${Object.entries(stats.perguntas_por_dificuldade).map(([dif, total]) => {
+                            const acertos = stats.acertos_por_dificuldade[dif] || 0;
+                            const percent = total > 0 ? Math.round((acertos / total) * 100) : 0;
+                            const colorClass = dif === 'facil' ? 'success' : dif === 'medio' ? 'warning' : 'danger';
+                            
+                            return `
+                                <div class="col-md-4 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-${colorClass}">${dif.toUpperCase()}</span>
+                                        <span>${acertos}/${total} (${percent}%)</span>
+                                    </div>
+                                    <div class="progress mt-1" style="height: 8px;">
+                                        <div class="progress-bar bg-${colorClass}" 
+                                             style="width: ${percent}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(difficultyStats);
+    }
+}
+
+async function showHistory() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/resultados/historico/', {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const history = await response.json();
+            displayHistory(history);
+            
+            const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        showAlert('Erro ao carregar histórico', 'danger');
+    }
+}
+
+function displayHistory(history) {
+    const container = document.getElementById('history-container');
+    
+    if (history.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-history display-4 text-muted mb-3"></i>
+                <p class="text-muted">Nenhuma resposta no histórico ainda.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = history.map(item => `
+        <div class="card mb-2">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            ${formatDate(item.data_tentativa)}
+                        </small>
+                        <p class="mb-0">${item.pergunta.enunciado.substring(0, 60)}...</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge ${item.acertou ? 'bg-success' : 'bg-danger'}">
+                            <i class="fas ${item.acertou ? 'fa-check' : 'fa-times'} me-1"></i>
+                            ${item.acertou ? 'Correto' : 'Incorreto'}
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                            ${item.pergunta.dificuldade.toUpperCase()}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showLoading(show) {
+    const spinner = document.getElementById('loading-spinner');
+    const container = document.getElementById('question-container');
+    
+    if (show) {
+        spinner.style.display = 'block';
+        container.innerHTML = '';
+    } else {
+        spinner.style.display = 'none';
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('pt-BR');
+}
+</script>
+{% endblock %}
+

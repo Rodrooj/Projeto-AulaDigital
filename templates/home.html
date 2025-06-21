@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AulaDigital - Alfabetização Digital para Professores{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Bem-vindo ao <span class="text-warning">AulaDigital</span>
+                </h1>
+                <p class="lead mb-4">
+                    A plataforma completa para alfabetização digital de professores. 
+                    Aprenda a usar tecnologias em sala de aula de forma simples e eficaz.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'tutoriais' %}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-play me-2"></i>Começar Agora
+                    </a>
+                    <a href="{% url 'quiz' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-gamepad me-2"></i>Jogar Quiz
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-image">
+                    <i class="fas fa-chalkboard-teacher display-1 text-warning opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-3">O que oferecemos</h2>
+                <p class="lead text-muted">Ferramentas e conteúdos pensados especialmente para educadores</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-video text-primary display-4"></i>
+                        </div>
+                        <h5 class="card-title">Tutoriais em Vídeo</h5>
+                        <p class="card-text text-muted">
+                            Aprenda passo a passo com vídeos explicativos sobre ferramentas digitais essenciais para o ensino.
+                        </p>
+                        <a href="{% url 'tutoriais' %}?tipo=video" class="btn btn-outline-primary">
+                            Ver Vídeos <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-file-alt text-success display-4"></i>
+                        </div>
+                        <h5 class="card-title">Artigos e Guias</h5>
+                        <p class="card-text text-muted">
+                            Conteúdo escrito detalhado com dicas práticas e estratégias para usar tecnologia em sala de aula.
+                        </p>
+                        <a href="{% url 'tutoriais' %}?tipo=texto" class="btn btn-outline-success">
+                            Ler Artigos <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-gamepad text-warning display-4"></i>
+                        </div>
+                        <h5 class="card-title">EducaQuiz</h5>
+                        <p class="card-text text-muted">
+                            Jogo interativo para seus alunos testarem conhecimentos de forma divertida e educativa.
+                        </p>
+                        <a href="{% url 'quiz' %}" class="btn btn-outline-warning">
+                            Jogar Agora <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <h3 class="display-6 fw-bold text-primary" id="total-tutoriais">0</h3>
+                    <p class="text-muted">Tutoriais Disponíveis</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <h3 class="display-6 fw-bold text-success" id="total-perguntas">0</h3>
+                    <p class="text-muted">Perguntas no Quiz</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <h3 class="display-6 fw-bold text-warning" id="total-usuarios">0</h3>
+                    <p class="text-muted">Usuários Cadastrados</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <h3 class="display-6 fw-bold text-info">100%</h3>
+                    <p class="text-muted">Gratuito</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Content Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="display-6 fw-bold text-center mb-3">Conteúdo Recente</h2>
+                <p class="lead text-center text-muted">Últimos tutoriais adicionados à plataforma</p>
+            </div>
+        </div>
+        
+        <div class="row" id="recent-tutorials">
+            <!-- Tutoriais recentes serão carregados aqui via JavaScript -->
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'tutoriais' %}" class="btn btn-primary btn-lg">
+                Ver Todos os Tutoriais <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-3">Pronto para começar?</h2>
+                <p class="lead mb-4">
+                    Junte-se a centenas de professores que já estão transformando suas aulas com tecnologia.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{% url 'registro' %}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Criar Conta Gratuita
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar estatísticas
+    loadStats();
+    
+    // Carregar tutoriais recentes
+    loadRecentTutorials();
+});
+
+async function loadStats() {
+    try {
+        // Simular carregamento de estatísticas
+        animateCounter('total-tutoriais', 15);
+        animateCounter('total-perguntas', 25);
+        animateCounter('total-usuarios', 150);
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+async function loadRecentTutorials() {
+    try {
+        const response = await fetch('/api/tutoriais/recentes/?limit=3');
+        if (response.ok) {
+            const tutorials = await response.json();
+            displayRecentTutorials(tutorials);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar tutoriais recentes:', error);
+        // Mostrar conteúdo de fallback
+        showFallbackTutorials();
+    }
+}
+
+function displayRecentTutorials(tutorials) {
+    const container = document.getElementById('recent-tutorials');
+    container.innerHTML = '';
+    
+    tutorials.forEach(tutorial => {
+        const tutorialCard = createTutorialCard(tutorial);
+        container.appendChild(tutorialCard);
+    });
+}
+
+function createTutorialCard(tutorial) {
+    const col = document.createElement('div');
+    col.className = 'col-md-4 mb-4';
+    
+    const typeIcon = tutorial.tipo === 'video' ? 'fas fa-play-circle' : 'fas fa-file-alt';
+    const typeColor = tutorial.tipo === 'video' ? 'text-danger' : 'text-primary';
+    
+    col.innerHTML = `
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="${typeIcon} ${typeColor} me-2"></i>
+                    <small class="text-muted text-uppercase">${tutorial.tipo}</small>
+                </div>
+                <h5 class="card-title">${tutorial.titulo}</h5>
+                <p class="card-text text-muted small">
+                    Por ${tutorial.criador_nome || 'AulaDigital'} • 
+                    ${formatDate(tutorial.data_publicacao)}
+                </p>
+                <a href="${tutorial.link_conteudo}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    Acessar <i class="fas fa-external-link-alt ms-1"></i>
+                </a>
+            </div>
+        </div>
+    `;
+    
+    return col;
+}
+
+function showFallbackTutorials() {
+    const container = document.getElementById('recent-tutorials');
+    container.innerHTML = `
+        <div class="col-12 text-center">
+            <p class="text-muted">Carregando tutoriais...</p>
+        </div>
+    `;
+}
+
+function animateCounter(elementId, targetValue) {
+    const element = document.getElementById(elementId);
+    let currentValue = 0;
+    const increment = targetValue / 50;
+    
+    const timer = setInterval(() => {
+        currentValue += increment;
+        if (currentValue >= targetValue) {
+            currentValue = targetValue;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(currentValue);
+    }, 30);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+</script>
+{% endblock %}
+

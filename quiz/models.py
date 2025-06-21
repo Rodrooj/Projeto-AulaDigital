@@ -11,7 +11,7 @@ class Pergunta(models.Model):
         ('medio', 'Médio'),
         ('dificil', 'Difícil'),
     ]
-
+    
     enunciado = models.TextField(
         verbose_name="Enunciado",
         help_text="O texto da pergunta do quiz"
@@ -34,20 +34,20 @@ class Pergunta(models.Model):
         verbose_name="Data de criação"
     )
     ativa = models.BooleanField(default=True, verbose_name="Ativa")
-
+    
     class Meta:
         verbose_name = "Pergunta"
         verbose_name_plural = "Perguntas"
         ordering = ['-data_criacao']
         db_table = 'quiz_pergunta'
-
+    
     def __str__(self):
         return f"{self.enunciado[:50]}... ({self.get_dificuldade_display()})"
-
+    
     def get_alternativas(self):
         """Retorna todas as alternativas desta pergunta"""
         return self.alternativas.all()
-
+    
     def get_alternativa_correta(self):
         """Retorna a alternativa correta desta pergunta"""
         return self.alternativas.filter(correta=True).first()
@@ -69,7 +69,7 @@ class Alternativa(models.Model):
         verbose_name="Correta",
         help_text="TRUE se esta for a resposta correta, FALSE caso contrário"
     )
-
+    
     class Meta:
         verbose_name = "Alternativa"
         verbose_name_plural = "Alternativas"
@@ -82,7 +82,7 @@ class Alternativa(models.Model):
                 name='unique_correct_answer_per_question'
             )
         ]
-
+    
     def __str__(self):
         status = "✓" if self.correta else "✗"
         return f"{status} {self.texto_alternativa[:30]}..."
@@ -113,17 +113,17 @@ class ResultadoQuiz(models.Model):
         auto_now_add=True,
         verbose_name="Data da tentativa"
     )
-
+    
     class Meta:
         verbose_name = "Resultado do Quiz"
         verbose_name_plural = "Resultados do Quiz"
         ordering = ['-data_tentativa']
         db_table = 'quiz_resultadoquiz'
-
+    
     def __str__(self):
         status = "✓" if self.acertou else "✗"
         return f"{self.aluno.nome} - {status} - {self.pergunta.enunciado[:30]}..."
-
+    
     def save(self, *args, **kwargs):
         """
         Override do save para automaticamente definir se o aluno acertou

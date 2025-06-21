@@ -10,11 +10,11 @@ class Tutorial(models.Model):
         ('video', 'Vídeo'),
         ('texto', 'Texto'),
     ]
-
+    
     titulo = models.CharField(max_length=255, verbose_name="Título")
     descricao = models.TextField(
-        null=True,
-        blank=True,
+        null=True, 
+        blank=True, 
         verbose_name="Descrição",
         help_text="Descrição detalhada do tutorial"
     )
@@ -41,13 +41,13 @@ class Tutorial(models.Model):
         verbose_name="Data de publicação"
     )
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
-
+    
     class Meta:
         verbose_name = "Tutorial"
         verbose_name_plural = "Tutoriais"
         ordering = ['-data_publicacao']
         db_table = 'tutoriais_tutorial'
-
+    
     def __str__(self):
         return f"{self.titulo} ({self.get_tipo_display()})"
 

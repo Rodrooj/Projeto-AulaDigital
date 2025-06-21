@@ -15,10 +15,9 @@ from quiz.models import Pergunta, Alternativa
 
 User = get_user_model()
 
-
 def criar_dados_iniciais():
     print("Criando dados iniciais...")
-
+    
     # Criar usuários
     if not User.objects.filter(username='prof_carlos').exists():
         professor = User.objects.create_user(
@@ -30,7 +29,7 @@ def criar_dados_iniciais():
             matricula='P98765'
         )
         print(f"Professor criado: {professor.nome}")
-
+    
     if not User.objects.filter(username='ana_julia').exists():
         aluno = User.objects.create_user(
             username='ana_julia',
@@ -41,10 +40,10 @@ def criar_dados_iniciais():
             matricula='A12345'
         )
         print(f"Aluno criado: {aluno.nome}")
-
+    
     # Obter administrador
     admin = User.objects.get(username='admin')
-
+    
     # Criar tutorial
     if not Tutorial.objects.filter(titulo='Como Usar o Google Docs').exists():
         tutorial = Tutorial.objects.create(
@@ -55,7 +54,7 @@ def criar_dados_iniciais():
             criador=admin
         )
         print(f"Tutorial criado: {tutorial.titulo}")
-
+    
     # Criar pergunta e alternativas
     if not Pergunta.objects.filter(enunciado__contains='ferramenta é usada para criar apresentações').exists():
         pergunta = Pergunta.objects.create(
@@ -63,7 +62,7 @@ def criar_dados_iniciais():
             dificuldade='facil',
             criador=admin
         )
-
+        
         # Criar alternativas
         alternativas_data = [
             ('Google Docs', False),
@@ -71,17 +70,17 @@ def criar_dados_iniciais():
             ('Google Slides', True),
             ('Google Forms', False),
         ]
-
+        
         for texto, correta in alternativas_data:
             Alternativa.objects.create(
                 pergunta=pergunta,
                 texto_alternativa=texto,
                 correta=correta
             )
-
+        
         print(f"Pergunta criada: {pergunta.enunciado}")
         print(f"Alternativas criadas: {len(alternativas_data)}")
-
+    
     # Criar mais tutoriais
     tutoriais_extras = [
         {
@@ -109,7 +108,7 @@ def criar_dados_iniciais():
             'tipo': 'texto'
         }
     ]
-
+    
     for tutorial_data in tutoriais_extras:
         if not Tutorial.objects.filter(titulo=tutorial_data['titulo']).exists():
             Tutorial.objects.create(
@@ -120,7 +119,7 @@ def criar_dados_iniciais():
                 criador=admin
             )
             print(f"Tutorial extra criado: {tutorial_data['titulo']}")
-
+    
     # Criar mais perguntas
     perguntas_extras = [
         {
@@ -154,7 +153,7 @@ def criar_dados_iniciais():
             ]
         }
     ]
-
+    
     for pergunta_data in perguntas_extras:
         if not Pergunta.objects.filter(enunciado=pergunta_data['enunciado']).exists():
             pergunta = Pergunta.objects.create(
@@ -162,18 +161,17 @@ def criar_dados_iniciais():
                 dificuldade=pergunta_data['dificuldade'],
                 criador=admin
             )
-
+            
             for texto, correta in pergunta_data['alternativas']:
                 Alternativa.objects.create(
                     pergunta=pergunta,
                     texto_alternativa=texto,
                     correta=correta
                 )
-
+            
             print(f"Pergunta extra criada: {pergunta_data['enunciado'][:50]}...")
-
+    
     print("Dados iniciais criados com sucesso!")
-
 
 if __name__ == '__main__':
     criar_dados_iniciais()
