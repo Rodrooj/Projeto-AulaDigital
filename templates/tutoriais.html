@@ -18,52 +18,6 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="input-group">
-                <span class="input-group-text">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input type="text" class="form-control" id="search-input" 
-                       placeholder="Buscar tutoriais...">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <select class="form-select" id="type-filter" onchange="filterTutorials()">
-                <option value="">Todos os tipos</option>
-                <option value="video">Vídeos</option>
-                <option value="texto">Artigos</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Tutorial Categories -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-outline-primary active" onclick="filterByCategory('all')">
-                    Todos
-                </button>
-                <button class="btn btn-outline-primary" onclick="filterByCategory('slides')">
-                    Slides
-                </button>
-                <button class="btn btn-outline-primary" onclick="filterByCategory('docs')">
-                    Google Docs
-                </button>
-                <button class="btn btn-outline-primary" onclick="filterByCategory('pesquisa')">
-                    Pesquisas
-                </button>
-                <button class="btn btn-outline-primary" onclick="filterByCategory('ia')">
-                    Inteligência Artificial
-                </button>
-                <button class="btn btn-outline-primary" onclick="filterByCategory('projetor')">
-                    Projetores
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Loading Spinner -->
     <div id="loading-spinner" class="text-center py-5" style="display: none;">
         <div class="spinner-border text-primary" role="status">
@@ -381,22 +335,6 @@ function formatDate(dateString) {
     return date.toLocaleDateString('pt-BR');
 }
 
-// Search functionality
-document.getElementById('search-input').addEventListener('input', 
-    debounce(filterTutorials, 300)
-);
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
 </script>
 {% endblock %}
 

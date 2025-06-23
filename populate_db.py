@@ -49,7 +49,7 @@ def criar_dados_iniciais():
         tutorial = Tutorial.objects.create(
             titulo='Como Usar o Google Docs',
             descricao='Aprenda o básico do Google Docs para criar e compartilhar documentos.',
-            link_conteudo='https://www.youtube.com/watch?v=exemplo',
+            link_conteudo='https://www.youtube.com/watch?v=qumPQRAhnQM',
             tipo='video',
             criador=admin
         )
@@ -86,25 +86,25 @@ def criar_dados_iniciais():
         {
             'titulo': 'Como criar Slides eficazes',
             'descricao': 'Aprenda técnicas para criar apresentações impactantes e envolventes.',
-            'link_conteudo': 'https://www.youtube.com/watch?v=slides_exemplo',
+            'link_conteudo': 'https://www.youtube.com/watch?v=ZwJUVybOWxw',
             'tipo': 'video'
         },
         {
             'titulo': 'Como fazer Pesquisas na Internet',
             'descricao': 'Guia completo para pesquisas eficientes e confiáveis online.',
-            'link_conteudo': 'https://exemplo.com/artigo-pesquisas',
+            'link_conteudo': 'https://www.youtube.com/watch?v=m9QqCnq_HI4',
             'tipo': 'texto'
         },
         {
             'titulo': 'Como usar IA em sala de aula',
             'descricao': 'Descubra como integrar ferramentas de IA no ensino.',
-            'link_conteudo': 'https://www.youtube.com/watch?v=ia_exemplo',
+            'link_conteudo': '|',
             'tipo': 'video'
         },
         {
             'titulo': 'Como usar projetores',
             'descricao': 'Manual prático para configurar e usar projetores em sala de aula.',
-            'link_conteudo': 'https://exemplo.com/artigo-projetores',
+            'link_conteudo': 'https://www.youtube.com/watch?v=SW5hadGaF7k',
             'tipo': 'texto'
         }
     ]
