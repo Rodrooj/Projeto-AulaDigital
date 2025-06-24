@@ -193,19 +193,19 @@ function createTutorialCard(tutorial) {
                     </small>
                 </div>
                 <div class="mt-3">
-                    <a href="${tutorial.link_conteudo}" target="_blank" 
+                    <a href="${"https://www.youtube.com/watch?v=qumPQRAhnQM"}" target="_blank"
                        class="btn btn-primary btn-sm me-2">
                         <i class="fas fa-external-link-alt me-1"></i>Acessar
                     </a>
                     <button class="btn btn-outline-secondary btn-sm" 
-                            onclick="shareTutorial('${tutorial.titulo}', '${tutorial.link_conteudo}')">
+                            onclick="shareTutorial('${"https://www.youtube.com/watch?v=qumPQRAhnQM"}', '${"https://www.youtube.com/watch?v=qumPQRAhnQM"}')">
                         <i class="fas fa-share me-1"></i>Compartilhar
                     </button>
                 </div>
             </div>
         </div>
     `;
-    
+
     return col;
 }
 
